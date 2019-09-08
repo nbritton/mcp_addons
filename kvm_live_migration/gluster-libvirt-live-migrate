@@ -1,0 +1,119 @@
+#!/bin/bash
+
+# Name: gluster-libvirt-live-migrate, Version: 1
+# Author: Nikolas Britton
+#     E-mail: ytvzwld.mcteezy@rxltw.nzx (caesar, 11)
+#     E-mail: jxneppkj@ienwjpeo.yki (caesar, 22)
+#     Website: http://www.exabit.io
+# Copyright 2019 Nikolas Britton, Apache 2.0 License
+
+# Discription:
+# This script will live migrate a libvirt/qemu managed virtual machine to a new gluster peer,
+# it presumes the virtal machine is stored on shared storage via gluster. It will search for
+# a new peer (by running gluster pool list) and then find the peer with the lowest processor
+# usage and most free memory. It will iterate through all the ranked peers until the virtual
+# machine is successfully migrated to a new peer. A successful transfer will be record in an
+# entry to /var/log/syslog using /usr/bin/logger. Tested on Ubuntu Server 16.04.5 LTS.
+
+# Installation:
+# A few simple modifications to the KVM nodes are needed to enable key based SSH authentication
+# for the libvirt-qemu system account, and also to enable keepalived to automatically failover
+# the virtual machine if the KVM node looses connectivity to VRRP multicast group.
+
+# To accomplish this, you should download the following yaml reclass configuration file: 
+https://github.com/nbritton/mcp_addons/kvm_live_migration/blob/master/libvirt_migration.yml
+
+# Save the yaml file to cfg01:/srv/salt/reclass/classes/cluster/*/infra/libvirt_migration.yml
+# Additionally, you will need to edit the file to add in your private and public keys for the
+# libvirt-qemu account. If you have custom hostnames in your cloud, you may also need to tweak
+# the hostnames. After completing these steps then you just have to add the configuration file
+# via a class include within ./infra/kvm.yml, then run the linux, openssh, and keepalived state
+# on the KVM nodes. Salt will then pull down this script and set everything up.
+
+# Usage:
+# Simply provide the fully qualified virtual machine name (as reported by virsh list) to the script.
+# For example: /usr/local/bin/gluster-libvirt-live-migrate cfg01.example.com
+
+# This script is intended to be used with a systemd unit file to automatically transfer a
+# virtual machine whenever a host machine is taken offline for service.
+
+if [[ $1 = "" ]]; then
+   echo "aborting, a virtual machine name must be provided as a command argument.";
+   exit 1;
+fi
+
+if [[ $2 != "" ]]; then
+   echo "aborting, only one argument can be passed to this command.";
+   exit 1;
+fi
+
+test -x /usr/bin/awk || {
+    echo "aborting, awk does not appear to be installed.";
+    exit 1;
+}
+
+test -x /usr/sbin/gluster || {
+    echo "aborting, gluster does not appear to be installed.";
+    exit 1;
+}
+
+test -x /bin/hostname || {
+    echo "aborting, hostname does not appear to be installed.";
+    exit 1;
+}
+
+test -x /usr/bin/logger || {
+    echo "aborting, logger does not appear to be installed.";
+    exit 1;
+}
+
+test -x /usr/bin/nproc || {
+    echo "aborting, nproc does not appear to be installed.";
+    exit 1;
+}
+
+test -x /usr/bin/sort || {
+    echo "aborting, sort does not appear to be installed.";
+    exit 1;
+}
+
+test -x /usr/bin/virsh || {
+    echo "aborting, virsh does not appear to be installed.";
+    exit 1;
+}
+
+test -f /var/lib/libvirt/.ssh/id_rsa || {
+    echo "aborting, /var/lib/libvirt/.ssh/id_rsa does not appear to exist.";
+    exit 1;
+}
+
+username="libvirt-qemu";
+hosts=$(gluster pool list | awk '/Connected/ && !/localhost/ {print $2}');
+ssh_command_options="-q -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null";
+cpu_load='$(($(nproc) / $(awk '\''{printf int($3)+1}'\'' /proc/loadavg)));';
+mem_free='awk '\''/MemFree:/ {printf " "$2" "}'\'' /proc/meminfo;';
+ssh_command_execute="printf ${cpu_load} ${mem_free} hostname";
+
+ssh_exec () {
+        output=$(ssh -i /var/lib/libvirt/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -qnl ${username} ${1} "${2}" 2>&1);
+        echo "${output}";
+}
+
+find_new_host () {
+    for host in ${hosts}; do
+        {
+            ssh_exec ${host} "${ssh_command_execute}";
+        } &
+    done | sort -rn | awk '{print $3}';
+    wait;
+}
+
+virsh_connect_options='/session?socket=/var/run/libvirt/libvirt-sock&keyfile=/var/lib/libvirt/.ssh/id_rsa&no_verify=1';
+/usr/bin/virsh list --name | grep -q ${1} && {
+    for i in $(find_new_host); do
+        /usr/bin/virsh migrate --live --p2p ${1} "qemu+ssh://${username}@${i}${virsh_connect_options}" && {
+           /usr/bin/logger "${1} transfered to ${i}";
+           exit;
+        }
+    done
+}
