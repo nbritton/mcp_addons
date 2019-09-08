@@ -1,0 +1,104 @@
+# Name: libvirt_migration.yml, Version: 1
+# Author: Nikolas Britton
+#     E-mail: ytvzwld.mcteezy@rxltw.nzx (caesar, 11)
+#     E-mail: jxneppkj@ienwjpeo.yki (caesar, 22)
+#     Website: http://www.exabit.io
+# Copyright 2019 Nikolas Britton, Apache 2.0 License
+
+# Discription:
+# This class adds the ability to do virtual machine live migrations between KVM nodes.
+# It's main purpose is to provide a highly available cfg01 node using gluster as the
+# storage backing for the cfg01 virtual machine disk image. It can be extend to
+# support any of the KVM virtual machines with a few simple modifications.
+
+# Installation:
+# Save the yaml file to cfg01:/srv/salt/reclass/classes/cluster/*/infra/libvirt_migration.yml
+# Additionally, you will need to edit the file to add in your private and public keys for the
+# libvirt-qemu account. If you have custom hostnames in your cloud, you may also need to tweak
+# the hostnames. After completing these steps then you just have to add the configuration file
+# via a class include within ./infra/kvm.yml, then run the linux, openssh, and keepalived state
+# on the KVM nodes. Salt will then do all the rest for you.
+
+# Usage:
+# By default, this yaml class will enable keepalived to automatically failover the cfg01 virtual
+# machine if the KVM node looses connectivity to VRRP multicast group. Additionally, a systemd
+# unit file is planned for a feature release that will allow automatic transfer of the cfg01
+# node whenever its KVM host is taken offline for service. Furthermore, virtual machines
+# can be manually transfered by simply providing the fully qualified virtual machine name
+# to the tool. For example:
+# /usr/local/bin/gluster-libvirt-live-migrate cfg01.example.com
+
+parameters:
+  _param:
+    
+    libvirt-qemu_private_key: |
+      -----BEGIN RSA PRIVATE KEY-----
+      ---> INSERT YOUR RSA PRIVATE KEY HERE <---
+      -----END RSA PRIVATE KEY-----
+
+    libvirt-qemu_public_key: ---> INSERT YOUR RSA PUBLIC KEY HERE <---
+    
+  openssh:
+    server:
+      enabled: true
+      user:
+        libvirt-qemu:
+          enabled: true
+          public_keys:
+            - key: ${_param:libvirt-qemu_public_key} libvirt-qemu@kvm.${_param:cluster_domain}
+          user: ${linux:system:user:libvirt-qemu}
+    client:
+      enabled: true
+      user:
+        libvirt-qemu:
+          enabled: true
+          private_key:
+            type: rsa
+            key: ${_param:libvirt-qemu_private_key}
+          user: ${linux:system:user:libvirt-qemu}
+
+  linux:
+    network:
+      host:
+        kvm:
+          address: ${_param:infra_kvm_address}
+          names:
+          - kvm.${_param:cluster_domain}
+          - kvm
+    system:
+      file:
+        /usr/local/bin/gluster-libvirt-live-migrate:
+          source: https://raw.githubusercontent.com/nbritton/mcp_addons/master/kvm_live_migration/gluster-libvirt-live-migrate
+          user: root
+          group: root
+          mode: 755
+      user:
+        libvirt-qemu:
+          enabled: true
+          shell: /bin/bash
+          groups:
+            - kvm
+            - libvirtd
+            - libvirt-qemu
+          gid: kvm
+          home_dir_mode: 755
+          name: libvirt-qemu
+          full_name: libvirt-qemu service
+          home: /var/lib/libvirt
+          email: libvirt-qemu@kvm.${_param:cluster_domain}
+
+  keepalived:
+    cluster:
+      enabled: True
+      instance:
+        VIP:
+          nopreempt: True
+          notify_action:
+            master:
+              - "exit;"
+            backup:
+              - "exit;"
+            fault:
+              - "/usr/local/bin/gluster-libvirt-live-migrate cfg01.${_param:cluster_domain};"
+            stop:
+              - "/usr/local/bin/gluster-libvirt-live-migrate cfg01.${_param:cluster_domain};"
