@@ -1,0 +1,12 @@
+#!/bin/bash
+
+## Get cluster name
+clustername=$(salt-call pillar.get _param:cluster_name | awk 'END {print $1}');
+
+echo "classes:" > ./machine_list.yml;
+
+for machine in $(ls *.yml | grep -v machine_list.yml); do
+
+    echo "- cluster.${clustername}.infra.maas_machines.$(echo ${machine} | sed 's/\.yml//g')" >> ./machine_list.yml;
+
+done
