@@ -2,7 +2,7 @@
 
 This suite of scripts will generate the maas machine yaml definitions for physical MCP nodes,
 it will create a separate yaml file for each machine. Input requires a machine table list to be
-provided as an argument to this script.
+provided as an argument to the main script.
 
 ```
 # The machine table is expected to be a space separated list with the following values:
