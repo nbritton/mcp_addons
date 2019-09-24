@@ -29,33 +29,33 @@ provided as an argument to this script.
 
 4. Using the bmc-ip-list.txt, pass that as an argument to the redfish-get-machine-table script:
 
-  ```
-  ./redfish-get-machine-table bmc-ip-list.txt > machine-table.csv;
-  ```
+   ```
+   ./redfish-get-machine-table bmc-ip-list.txt > machine-table.csv;
+   ```
 
 5. Sometimes hostnames returned by the BMC are capitalized, these should be converted to lower case:
 
-  ```
-  ./convert-hostname-to-lowercase machine-table.csv > lowercase-machine-table.csv;
-  ```
+   ```
+   ./convert-hostname-to-lowercase machine-table.csv > lowercase-machine-table.csv;
+   ```
 
 6. After your machine table is the way you want it then use the maas-generate-machine-yaml script to generate the yaml machine definitions. For each node it will generate an individual yaml file, the yaml file will be named using the hostname provided in the machine-table.
 
-  ```
-  ./maas-generate-machine-yaml lowercase-machine-table.csv;
-  ```
+   ```
+   ./maas-generate-machine-yaml lowercase-machine-table.csv;
+   ```
 
 7. After you have all the machine definition yaml files created then run the reclass-generate-class-includes script to include them into the ./infra/maas_machines/machine_list.yml file. This file manages the class includes for all of the individual machine yaml files.
 
-  ```
-  ./reclass-generate-class-includes;
-  ```
+   ```
+   ./reclass-generate-class-includes;
+   ```
 
 9. In the default ./infra/maas_machines.yml file appended the following to the very top of it:
 
-  ```
-  classes:
-  - cluster.dvtcos.infra.maas_machines.machine_list
-  ```
+   ```
+   classes:
+   - cluster.dvtcos.infra.maas_machines.machine_list
+   ```
 
   
