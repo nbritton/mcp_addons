@@ -11,8 +11,8 @@ provided as an argument to the main script.
 # column 3: Hostname (should be in lowercase format)
 # column 4: Mac Address for NIC 1, interface 1.
 # column 5: Mac Address for NIC 1, interface 2.
-# column 6: Mac Address for NIC 1, interface 1.
-# column 7: Mac Address for NIC 1, interface 2.
+# column 6: Mac Address for NIC 2, interface 1.
+# column 7: Mac Address for NIC 2, interface 2.
 ```
 
 #  Instructions:
