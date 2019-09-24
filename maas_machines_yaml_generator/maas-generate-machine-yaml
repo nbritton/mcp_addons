@@ -1,0 +1,91 @@
+#!/bin/bash
+
+## Set bmc_username and bmc_password below prior to running.
+
+# The purpuse of this script is to generate the maas machine yaml definitions for Cisco UCS nodes,
+# it will create a seprate yaml file for each machine. Input requires a machine table list to be
+# provided as an argument to this script.
+
+#Usage example: ./maas-generate-node-yaml cisco-machine-table.txt
+
+# The machine table is expected to be a space seperated list with the following values:
+# column 1: BMC IP Address
+# column 2: Machine Serial Number
+# column 3: Hostname (should be in lowercase format)
+# column 4: Mac Address for NIC 1, interface 1.
+# column 5: Mac Address for NIC 1, interface 2.
+# column 6: Mac Address for NIC 1, interface 1.
+# column 7: Mac Address for NIC 1, interface 2.
+
+# The machine table can be generated using the redfish-get-mac-addresses script,
+# simply provide a list (one IP per line) of BMC IP addresses to the script.
+# For example: ./redfish-get-machine-table cisco-bmc-ip-list.txt
+
+# If the hostnames returned by the redfish-get-machine-table are in uppercase they should be
+# convert to lowercase before passing the machine table into this script, use can use the
+# ./convert-hostname-to-lowercase script to acomplish this.
+# For example: ./convert-hostname-to-lowercase cisco-machine-table.txt
+
+while read machine; do
+bmc_username="";
+bmc_password="";
+bmc_ip_address="$(echo ${machine} | awk '{print $1}')";
+serial_number="$(echo ${machine} | awk '{print $2}')";
+hostname="$(echo ${machine} | awk '{print $3}')";
+mac_1_1="$(echo ${machine} | awk '{print $4}')";
+mac_1_2="$(echo ${machine} | awk '{print $5}')";
+mac_2_1="$(echo ${machine} | awk '{print $6}')";
+mac_2_2="$(echo ${machine} | awk '{print $7}')";
+zone="$(echo ${hostname} | sed 's/oscmp[0-9][0-9][0-9]$//')";
+#pod="$(echo ${hostname} | sed 's/^[a-z]*//' | cut -c-1)";
+pod="1";
+
+cat << EOF > ${hostname}.yml
+parameters:
+  maas:
+    region:
+      machines:
+        ${hostname}:
+          pxe_interface_mac: "${mac_2_2}"
+          disk_layout:
+            type: flat
+            bootable_device: sda
+            disk:
+              sda:
+                type: physical
+                partition_schema:
+                  part1:
+                    type: xfs
+                    size: "958995M"
+                    mount: '/'
+          interfaces:
+            nic01:
+              type: eth
+              name: ten1
+              mac: "${mac_1_1}" # /redfish/v1/Systems/${serial_number}/EthernetInterfaces/1.1 / enp4s0f0
+              subnet: ${zone}${pod}_deploy_network
+              mode: DHCP
+            nic02:
+              type: eth
+              name: ten2
+              mac: "${mac_1_2}" # /redfish/v1/Systems/${serial_number}/EthernetInterfaces/1.2 / enp4s0f1
+              mode: LINK_UP
+            nic03:
+              type: eth
+              name: ten3
+              mac: "${mac_2_1}" # /redfish/v1/Systems/${serial_number}/EthernetInterfaces/2.1 / enp129s0f0
+              mode: LINK_UP
+            nic04:
+              type: eth
+              name: ten4
+              mac: "${mac_2_2}" # /redfish/v1/Systems/${serial_number}/EthernetInterfaces/2.2 / enp129s0f1
+              mode: LINK_UP
+          power_parameters:
+            power_address: ${bmc_ip_address}
+            power_pass: ${bmc_password}
+            power_type: ipmi
+            power_user: ${bmc_username}
+          distro_series: xenial
+          hwe_kernel: hwe-16.04
+EOF
+done < ${1};
