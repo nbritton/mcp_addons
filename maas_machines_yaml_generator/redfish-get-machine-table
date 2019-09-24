@@ -1,0 +1,17 @@
+#!/bin/bash
+
+## Confirmed to work on Cisco CIMC v4.0(2h).
+
+## Set username and password prior to running.
+username=""; 
+password="";
+
+for host in $(cat ${1}); do
+    serialnumber="$(http --verify no -a ${username}:${password} GET https://${host}/redfish/v1/Chassis/1 | awk -F'"' '/SerialNumber/ {print $4}')";
+    hostname="$(http --verify no -a ${username}:${password} GET https://${host}/redfish/v1/Systems/${serialnumber} | awk -F'"' '/HostName/ {print $4}')";
+    printf "${host} ${serialnumber} ${hostname} ";
+    for interface in 1.1 1.2 2.1 2.2; do
+        http --verify no -a ${username}:${password} GET https://${host}/redfish/v1/Systems/${serialnumber}/EthernetInterfaces/${interface} | awk -F'"' '/PermanentMACAddress/ {printf $4" "}';
+    done
+    echo;
+done
