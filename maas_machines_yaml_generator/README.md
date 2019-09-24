@@ -25,7 +25,7 @@ provided as an argument to the main script.
 
 2. Copy the scripts contained here to maas_machines and make them executable.
 
-3. Gather together a list of the IP addresses for all of Baseboard Management Controllers (i.g. Dell iDRAC, Cisco CIMC) that you want to collect information about. The DTMF Redfish RESTful API must be enabled, requires Dell iDRAC 7+ with firmware v2.40.40.40, or Cisco CIMC v4.0(2h). Save this file to bmc-ip-list.txt or something like that.
+3. Gather together a list of the IP addresses for all of the Baseboard Management Controllers (i.g. Dell iDRAC, Cisco CIMC) that you want to collect information about. To use the redfish script, the DTMF Redfish RESTful API must be enabled on the BMC, for Dell this requres iDRAC 7+ with firmware v2.40.40.40. For Cisco CIMC this requires v4.0. Save this file to bmc-ip-list.txt or something like that.
 
 4. Using the bmc-ip-list.txt, pass that as an argument to the redfish-get-machine-table script:
 
