@@ -107,6 +107,9 @@ password="calvin";
 # racadm set BIOS.OneTimeBoot.OneTimeBootMode OneTimeBootSeq
 # racadm set BIOS.OneTimeBoot.OneTimeBootSeqDev NIC.Integrated.1-1-1
 
+## Enable DMTF Redfish RESTful API:
+# racadm set iDRAC.Redfish.Enable Enabled
+
 ## Configure IDRAC miscellaneous settings:
 # racadm set iDRAC.VirtualConsole.PluginType 2  # HTML5 (requires iDRAC v2.30.30.30 or greater).
 # racadm set system.power.redundancypolicy 1
@@ -152,8 +155,23 @@ password="calvin";
 ## Queue Integrated RAID changes, for RAID use the --realtime option.
 # racadm jobqueue create --realtime RAID.Integrated.1-1
 
-## View disk layouts:
+## View volume layouts:
 # racadm raid get vdisks -o -p layout,status
+
+## View physical disks:
+# racadm storage get pdisks
+
+## Reset PERC configuration (destructive):
+# racadm storage resetconfig:RAID.Integrated.1-1
+
+## Delete volume(s):
+# racadm raid deletevd:Disk.Virtual.0:RAID.Integrated.1-1
+# racadm raid deletevd:Disk.Virtual.1:RAID.Integrated.1-1
+
+## Create multi-volume array:
+# racadm raid createvd:RAID.Integrated.1-1 -rl r5 -ss 64k -wp wt -rp ra -dcp enabled -pdkey:Disk.Bay.0:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.1:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.2:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.3:Enclosure.Internal.0-1:RAID.Integrated.1-1 -name ROOT -size 500g
+# racadm raid createvd:RAID.Integrated.1-1 -rl r5 -ss 64k -wp wt -rp ra -dcp enabled -pdkey:Disk.Bay.0:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.1:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.2:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.3:Enclosure.Internal.0-1:RAID.Integrated.1-1 -name INSTANCES
+# racadm jobqueue create --realtime RAID.Integrated.1-1
 
 idrac_exec () {
 	output=$(sshpass -p ${password} ssh -o StrictHostKeyChecking=no -nl ${username} ${1} "${2}" 2>&1 | nl -w1 | sed "s/^/${1}, /g");
