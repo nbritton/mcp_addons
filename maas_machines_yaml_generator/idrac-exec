@@ -35,6 +35,43 @@ password="calvin";
 # racadm set bios.procsettings.procx2apic Enabled
 # racadm jobqueue create -r pwrcycle -s TIME_NOW BIOS.Setup.1-1
 
+# Example program output (parallel execution with fifo return):
+# nbritton@lab01:~$ ./idrac-exec idrac-ip-list 'racadm set NIC.NICConfig.1.legacybootproto PXE'
+# 10.0.0.3, 1	[Key=NIC.Slot.2-1-1#legacybootproto]
+# 10.0.0.3, 2	RAC1017: Successfully modified the object value and the change is in
+# 10.0.0.3, 3	       pending state.
+# 10.0.0.3, 4	       To apply modified value, create a configuration job and reboot
+# 10.0.0.3, 5	       the system. To create the commit and reboot jobs, use "jobqueue"
+# 10.0.0.3, 6	       command. For more information about the "jobqueue" command, see RACADM
+# 10.0.0.3, 7	       help.
+# 10.0.0.1, 1	[Key=NIC.Slot.2-1-1#legacybootproto]
+# 10.0.0.1, 2	RAC1017: Successfully modified the object value and the change is in
+# 10.0.0.1, 3	       pending state.
+# 10.0.0.1, 4	       To apply modified value, create a configuration job and reboot
+# 10.0.0.1, 5	       the system. To create the commit and reboot jobs, use "jobqueue"
+# 10.0.0.1, 6	       command. For more information about the "jobqueue" command, see RACADM
+# 10.0.0.1, 7	       help.
+# 10.0.0.2, 1	[Key=NIC.Slot.2-1-1#legacybootproto]
+# 10.0.0.2, 2	RAC1017: Successfully modified the object value and the change is in
+# 10.0.0.2, 3	       pending state.
+# 10.0.0.2, 4	       To apply modified value, create a configuration job and reboot
+# 10.0.0.2, 5	       the system. To create the commit and reboot jobs, use "jobqueue"
+# 10.0.0.2, 6	       command. For more information about the "jobqueue" command, see RACADM
+# 10.0.0.2, 7	       help.
+# nbritton@lab01:~$ ./idrac-exec idrac-ip-list 'racadm jobqueue create -r pwrcycle -s TIME_NOW NIC.Slot.2-1-1'
+# 10.0.0.1, 1	RAC1024: Successfully scheduled a job.
+# 10.0.0.1, 2	Verify the job status using "racadm jobqueue view -i JID_xxxxx" command.
+# 10.0.0.1, 3	Commit JID = JID_694820258226
+# 10.0.0.1, 4	Reboot JID = RID_694820259023
+# 10.0.0.3, 1	RAC1024: Successfully scheduled a job.
+# 10.0.0.3, 2	Verify the job status using "racadm jobqueue view -i JID_xxxxx" command.
+# 10.0.0.3, 3	Commit JID = JID_694820267373
+# 10.0.0.3, 4	Reboot JID = RID_694820268320
+# 10.0.0.2, 1	RAC1024: Successfully scheduled a job.
+# 10.0.0.2, 2	Verify the job status using "racadm jobqueue view -i JID_xxxxx" command.
+# 10.0.0.2, 3	Commit JID = JID_694820285584
+# 10.0.0.2, 4	Reboot JID = RID_694820287385
+
 #######################################################
 ### Below are some relevant idrac command examples: ###
 #######################################################
