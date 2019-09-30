@@ -21,10 +21,10 @@
 # simply provide a list (one IP per line) of BMC IP addresses to the script.
 # For example: ./redfish-get-machine-table cisco-bmc-ip-list.txt
 
-# If the hostnames returned by the redfish-get-machine-table are in uppercase they should be
-# convert to lowercase before passing the machine table into this script, use can use the
-# ./convert-hostname-to-lowercase script to acomplish this.
-# For example: ./convert-hostname-to-lowercase cisco-machine-table.txt
+# If the hostnames and/or MACs returned by the redfish-get-machine-table are in uppercase
+# they should be convert to lowercase before passing the machine table into this script,
+# use can use the ./convert-table-to-lowercase script to acomplish this.
+# For example: ./convert-table-to-lowercase cisco-machine-table.txt
 
 while read machine; do
 bmc_username="";
