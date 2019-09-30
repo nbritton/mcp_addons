@@ -36,7 +36,7 @@ provided as an argument to the main script.
 5. Sometimes hostnames returned by the BMC are capitalized, these should be converted to lower case:
 
    ```
-   ./convert-hostname-to-lowercase machine-table.csv > lowercase-machine-table.csv;
+   ./convert-table-to-lowercase machine-table.csv > lowercase-machine-table.csv;
    ```
 
 6. After your machine table is the way you want it then use the maas-generate-machine-yaml script to generate the yaml machine definitions. For each node it will generate an individual yaml file, the yaml file will be named using the hostname provided in the machine-table.
