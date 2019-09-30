@@ -110,6 +110,9 @@ password="calvin";
 ## Enable DMTF Redfish RESTful API:
 # racadm set iDRAC.Redfish.Enable Enabled
 
+## Enable local control of iDRAC (i.e. racadm from OpenManage srvadmin-idrac package)
+# racadm set iDRAC.LocalSecurity.LocalConfigDisabled Disabled
+
 ## Configure IDRAC miscellaneous settings:
 # racadm set iDRAC.VirtualConsole.PluginType 2  # HTML5 (requires iDRAC v2.30.30.30 or greater).
 # racadm set system.power.redundancypolicy 1
