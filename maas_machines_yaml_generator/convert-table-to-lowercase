@@ -1,0 +1,3 @@
+#!/bin/bash
+
+awk '{print $1" "$2" "tolower($3)" "tolower($4)" "tolower($5)" "tolower($6)" "tolower($7)}' $1;
