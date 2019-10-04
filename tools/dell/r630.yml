@@ -1,0 +1,5 @@
+classes:
+- cluster.<cluster_name>.infra.tools.physical
+- cluster.<cluster_name>.infra.tools.dell.openmanage
+- cluster.<cluster_name>.infra.tools.dell.dsu
+- cluster.<cluster_name>.infra.tools.dell.perccli
