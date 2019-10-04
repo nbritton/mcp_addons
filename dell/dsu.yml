@@ -1,0 +1,36 @@
+# Dell EMC System Update Ubuntu Support Matrix:
+#   DSU Version: 1.6.0: Trusty, Xenial
+#   DSU Version: 1.7.0: Xenial, Bionic
+
+parameters:
+  linux:
+    system:
+
+      repo:
+        dell_dsu:
+          refresh_db: True
+          humanname: "Dell EMC System Update"
+          source: "deb [arch=amd64 trusted=yes] http://${_param:infra_config_address}/dell/dsu/ /"
+          architectures: amd64
+          clean_file: true
+
+      package:
+        dell-system-update:
+          version: latest
+        libssh2-1:
+          version: latest
+        libgpgme11:  # DSU 1.7 requires libgpgme11 (GnuPG Made Easy)
+          version: latest
+
+      file:  # PGP public key import is required for DSU 1.7
+        0x756ba70b1019ced6.asc:
+          name: /usr/libexec/dell_dup/0x756ba70b1019ced6.asc
+          source: https://linux.dell.com/repo/pgp_pubkeys/0x756ba70b1019ced6.asc
+
+        0x1285491434D8786F.asc:
+          name: /usr/libexec/dell_dup/0x1285491434D8786F.asc
+          source: https://linux.dell.com/repo/pgp_pubkeys/0x1285491434D8786F.asc
+
+        0xca77951d23b66a9d.asc:
+          name: /usr/libexec/dell_dup/0xca77951d23b66a9d.asc
+          source: https://linux.dell.com/repo/pgp_pubkeys/0xca77951d23b66a9d.asc
