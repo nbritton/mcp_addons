@@ -1,0 +1,34 @@
+parameters:
+  linux:
+    system:
+      package:
+        fio:
+          version: latest
+        htop:
+          version: latest
+        iotop:
+          version: latest
+        iperf3:
+          version: latest
+        iputils-arping:
+          version: latest
+        iputils-tracepath:
+          version: latest
+        jq:
+          version: latest
+        mtr:
+          version: latest
+        nano:
+          version: latest
+        ngrep:
+          version: latest
+        nmap:
+          version: latest
+        pcregrep:
+          version: latest
+        socat:
+          version: latest
+        sysstat:
+          version: latest
+        vim:
+          version: latest
