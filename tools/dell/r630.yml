@@ -1,5 +1,0 @@
-classes:
-- cluster.dukeos.infra.tools.physical
-- cluster.dukeos.infra.tools.dell.openmanage
-- cluster.dukeos.infra.tools.dell.dsu
-- cluster.dukeos.infra.tools.dell.perccli
