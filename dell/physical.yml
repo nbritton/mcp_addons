@@ -1,0 +1,12 @@
+parameters:
+  linux:
+    system:
+      package:
+        netdiscover:
+          version: latest
+        smartmontools:
+          version: latest
+        lm-sensors:
+          version: latest
+        lldpad:
+          version: latest
