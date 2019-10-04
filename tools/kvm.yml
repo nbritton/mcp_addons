@@ -1,0 +1,12 @@
+classes:
+- cluster.<cluster_name>.infra.tools.dell.r630
+parameters:
+  linux:
+    system:
+      package:
+        libguestfs-tools:
+          version: latest
+        virtinst:
+          version: latest
+        zfsutils-linux:
+          version: latest
