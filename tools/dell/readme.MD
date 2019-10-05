@@ -1,4 +1,4 @@
-# Dell PowerEdge Platform Integration:
+# Mirantis MCP - Dell PowerEdge Platform Integration:
 
 The included yaml files in this directory will integrate Dell's platform management tools for PowerEdge servers into MCP. Specifically, these will pull in Dell's OpenManage suite, Dell EMC System Update, and PERCCLI utilities to facilitate advanced platform management and health monitoring capabilities.
 
