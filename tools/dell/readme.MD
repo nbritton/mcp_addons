@@ -43,7 +43,7 @@ https://github.com/nbritton/get-dell-dsu-deb-pkgs
 To build the Ubuntu PERCCLI packages you also need:
 https://github.com/nbritton/make-perccli-deb-pkgs
 
-For interacting with iDRACs (pre-deployment) in a and/or parallel fashion see also:
+For interacting with iDRACs (pre-deployment) in a scripted and/or parallel fashion see also:
 https://github.com/nbritton/mcp_addons/blob/master/maas_machines_yaml_generator/idrac-exec
 
 #### With this initial release, the following Dell R630 system firmware versions have been validated with MCP:
