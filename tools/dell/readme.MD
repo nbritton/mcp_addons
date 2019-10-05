@@ -1,6 +1,6 @@
 # Dell PowerEdge Platform Integration:
 
-The included yaml files in this directory will intigrate Dell's platform management tools for PowerEdge servers into MCP. Specifically, these will pull in Dell's OpenManage suite, Dell EMC System Update, and PERCCLI utilities to facilitate advanced platform management and health monitoring capabilities.
+The included yaml files in this directory will integrate Dell's platform management tools for PowerEdge servers into MCP. Specifically, these will pull in Dell's OpenManage suite, Dell EMC System Update, and PERCCLI utilities to facilitate advanced platform management and health monitoring capabilities.
 
 #### Included are:
 
@@ -43,7 +43,7 @@ https://github.com/nbritton/get-dell-dsu-deb-pkgs
 To build the Ubuntu PERCCLI packages you also need:
 https://github.com/nbritton/make-perccli-deb-pkgs
 
-For interacting with iDRACs (pre-deployment) in a scripted / parrallel fashion see also:
+For interacting with iDRACs (pre-deployment) in a and/or parallel fashion see also:
 https://github.com/nbritton/mcp_addons/blob/master/maas_machines_yaml_generator/idrac-exec
 
 #### With this initial release, the following Dell R630 system firmware versions have been validated with MCP:
@@ -102,7 +102,7 @@ salt '<dell-machine>' cmd.run 'export TERM=xterm; export file=Systems-Management
 ```
 
 #### Very Important:
-**Intel X520 network interface firmware cannot be upgraded with DSU at this time**, because there is an issue within the Intel X520 firmware version 18.8.9, do not upgrade to that version without first ensuring you have physical access to disconnect the machine from mains power. Updating past version 18.5.18 requires a complete power cycle of the machine, which means the machine has to be unplugged from the mains to drain residual flea power, this is necessary to trigger the NICs to reset (normally it stays online even when the machine is turned off for Wake-on-LAN functionality) so that they can load the new data structures that were added in the new firmware. If this step is not followed the NICs will not come online after the update. It is possible to rollback if a machine was accidently upgrade to 18.8.9, and can't be physically unplugged, by reapplying the 18.5.18 firmware[1]. Use the iDRAC LifeCycle controller to downgrade the firmware to 18.5.8, and through experiance I've found that one usually will need to repeat this step at least two times for the change to take effect. It also may be helpfuly to trigger a On/Off power cycle via the iDRAC. If that doesn't work a couple other methods exist, but these requre transfering the DUP BIN to the host operating system via the iDRAC Virtual Media device.
+**Intel X520 network interface firmware cannot be upgraded with DSU at this time**, because there is an issue within the Intel X520 firmware version 18.8.9, do not upgrade to that version without first ensuring you have physical access to disconnect the machine from mains power. Updating past version 18.5.18 requires a complete power cycle of the machine, which means the machine has to be unplugged from the mains to drain residual flea power, this is necessary to trigger the NICs to reset (normally it stays online even when the machine is turned off for Wake-on-LAN functionality) so that they can load the new data structures that were added in the new firmware. If this step is not followed the NICs will not come online after the update. It is possible to rollback if a machine was accidentally upgrade to 18.8.9, and can't be physically unplugged, by reapplying the 18.5.18 firmware[1]. Use the iDRAC LifeCycle controller to downgrade the firmware to 18.5.8, and through experience I've found that one usually will need to repeat this step at least two times for the change to take effect. It also may be helpful to trigger an On/Off power cycle via the iDRAC. If that doesn't work a couple other methods exist, but these require transferring the DUP BIN to the host operating system via the iDRAC Virtual Media device.
 
 [1]: https://downloads.dell.com/FOLDER05152341M/2/Network_Firmware_3XJH0_WN64_18.5.18_A00_01.EXE
 
@@ -113,7 +113,7 @@ wget https://downloads.dell.com/FOLDER05152339M/1/Network_Firmware_3XJH0_LN_18.5
 bash ./Network_Firmware_3XJH0_LN_18.5.18_A00.BIN -qf;
 ```
 
-Note: In machines with multiple Intel X520 cards, it is ususally safe to disregard any error messages that say the update failed, this is typically related to a bug in the DUP scripts that causes this erroneous message to be displayed. If after rebooting, the device does not come back online reapply the firmware update (via iDRAC, at least once, possibly twice) and reboot, this almost always will fix it.
+Note: In machines with multiple Intel X520 cards, it is usually safe to disregard any error messages that say the update failed, this is typically related to a bug in the DUP scripts that causes this erroneous message to be displayed. If after rebooting, the device does not come back online reapply the firmware update (via iDRAC, at least once, possibly twice) and reboot, this almost always will fix it.
 
 To apply the Intel X520 NIC firmware using salt, you must set the TERM variable, for example:
 ```bash
