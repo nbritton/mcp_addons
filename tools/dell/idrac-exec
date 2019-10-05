@@ -1,0 +1,196 @@
+#!/bin/bash
+
+# Name: idrac-exec, Version: 1
+# Author: Nikolas Britton
+#     E-mail: ytvzwld.mcteezy@rxltw.nzx (caesar, 11)
+#     E-mail: jxneppkj@ienwjpeo.yki (caesar, 22)
+#     Website: http://www.exabit.io
+# Copyright 2019 Nikolas Britton, Apache 2.0 License
+
+# Description: this script was created to interact with Dell iDRAC modules.
+# It can issue commands in parallel to any arbitrary number of iDRAC devices.
+# The script takes two arguments (address and command), the argument inputs
+# can be provided as a string or a text file containing a list of strings.
+# This script has a runtime dependency on ssh, sshpass, nl, and sed commands.
+
+# Please configure the following variables:
+
+username="root";
+password="calvin";
+
+# Command usage examples:
+# idrac-exec.sh 1.2.3.4 'racadm hwinventory' # address and command provided as a string.
+# idrac-exec.sh ip-list.txt 'racadm hwinventory' # addresses provided in a text list and command provided as a string.
+# idrac-exec.sh ip-list.txt command-list.txt # addresses and commands provided in text lists.
+# idrac-exec.sh 1.2.3.4 command-list.txt # address provided as a string and commands provided in a text list.
+
+# __ip-list.txt example data__
+# 1.1.1.1
+# 2.2.2.2
+# 3.3.3.3
+
+# __command-list.txt example data__
+# racadm set bios.integrateddevices.integratednetwork1 DisabledOs
+# racadm set bios.integrateddevices.IoatEngine Enabled
+# racadm set bios.procsettings.procx2apic Enabled
+# racadm jobqueue create -r pwrcycle -s TIME_NOW BIOS.Setup.1-1
+
+# Example program output (parallel execution with fifo return):
+# nbritton@lab01:~$ ./idrac-exec idrac-ip-list 'racadm set NIC.NICConfig.1.legacybootproto PXE'
+# 10.0.0.3, 1	[Key=NIC.Slot.2-1-1#legacybootproto]
+# 10.0.0.3, 2	RAC1017: Successfully modified the object value and the change is in
+# 10.0.0.3, 3	       pending state.
+# 10.0.0.3, 4	       To apply modified value, create a configuration job and reboot
+# 10.0.0.3, 5	       the system. To create the commit and reboot jobs, use "jobqueue"
+# 10.0.0.3, 6	       command. For more information about the "jobqueue" command, see RACADM
+# 10.0.0.3, 7	       help.
+# 10.0.0.1, 1	[Key=NIC.Slot.2-1-1#legacybootproto]
+# 10.0.0.1, 2	RAC1017: Successfully modified the object value and the change is in
+# 10.0.0.1, 3	       pending state.
+# 10.0.0.1, 4	       To apply modified value, create a configuration job and reboot
+# 10.0.0.1, 5	       the system. To create the commit and reboot jobs, use "jobqueue"
+# 10.0.0.1, 6	       command. For more information about the "jobqueue" command, see RACADM
+# 10.0.0.1, 7	       help.
+# 10.0.0.2, 1	[Key=NIC.Slot.2-1-1#legacybootproto]
+# 10.0.0.2, 2	RAC1017: Successfully modified the object value and the change is in
+# 10.0.0.2, 3	       pending state.
+# 10.0.0.2, 4	       To apply modified value, create a configuration job and reboot
+# 10.0.0.2, 5	       the system. To create the commit and reboot jobs, use "jobqueue"
+# 10.0.0.2, 6	       command. For more information about the "jobqueue" command, see RACADM
+# 10.0.0.2, 7	       help.
+# nbritton@lab01:~$ ./idrac-exec idrac-ip-list 'racadm jobqueue create -r pwrcycle -s TIME_NOW NIC.Slot.2-1-1'
+# 10.0.0.1, 1	RAC1024: Successfully scheduled a job.
+# 10.0.0.1, 2	Verify the job status using "racadm jobqueue view -i JID_xxxxx" command.
+# 10.0.0.1, 3	Commit JID = JID_694820258226
+# 10.0.0.1, 4	Reboot JID = RID_694820259023
+# 10.0.0.3, 1	RAC1024: Successfully scheduled a job.
+# 10.0.0.3, 2	Verify the job status using "racadm jobqueue view -i JID_xxxxx" command.
+# 10.0.0.3, 3	Commit JID = JID_694820267373
+# 10.0.0.3, 4	Reboot JID = RID_694820268320
+# 10.0.0.2, 1	RAC1024: Successfully scheduled a job.
+# 10.0.0.2, 2	Verify the job status using "racadm jobqueue view -i JID_xxxxx" command.
+# 10.0.0.2, 3	Commit JID = JID_694820285584
+# 10.0.0.2, 4	Reboot JID = RID_694820287385
+
+#######################################################
+### Below are some relevant idrac command examples: ###
+#######################################################
+
+# For further details on commands, in particular determining how to set a FQDD value, use the help feature, i.e.:
+# racadm help bios.integrateddevices.integratednetwork1
+
+# See also iDRAC RACADM CLI Guide:
+# https://topics-cdn.dell.com/pdf/idrac7-8-lifecycle-controller-v2606060_cli-guide_en-us.pdf
+
+## Delete old and/or stale jobs:
+# racadm jobqueue delete --all
+
+## Reboot machines:
+# racadm serveraction hardreset
+
+## Configure BIOS:
+# racadm set bios.integrateddevices.integratednetwork1 DisabledOs
+# racadm set bios.integrateddevices.IoatEngine Enabled
+# racadm set bios.procsettings.procx2apic Enabled
+# racadm set bios.procsettings.ProcVirtualization Enabled
+# racadm set bios.sysprofilesettings.SysProfile PerfOptimized
+# racadm set bios.biosbootsettings.BootSeqRetry Enabled
+# racadm set bios.biosbootsettings.HddFailover Disabled
+# racadm set bios.biosbootsettings.BootMode Bios
+# racadm jobqueue create -r pwrcycle -s TIME_NOW BIOS.Setup.1-1
+
+## Configure NIC (10 GbE Add-In-Card, Slot 2, Port 1, Partition 1) to PXE boot. (1 GbE Quad Integrated NIC disabled changes NICConfig.n from 5 to 1):
+# racadm set NIC.NICConfig.1.legacybootproto PXE
+# racadm jobqueue create -r pwrcycle -s TIME_NOW NIC.Slot.2-1-1
+
+## One time PXE boot:
+# racadm set BIOS.OneTimeBoot.OneTimeBootMode OneTimeBootSeq
+# racadm set BIOS.OneTimeBoot.OneTimeBootSeqDev NIC.Integrated.1-1-1
+
+## Enable DMTF Redfish RESTful API:
+# racadm set iDRAC.Redfish.Enable Enabled
+
+## Enable local control of iDRAC (i.e. racadm from OpenManage srvadmin-idrac package)
+# racadm set iDRAC.LocalSecurity.LocalConfigDisabled Disabled
+
+## Configure IDRAC miscellaneous settings:
+# racadm set iDRAC.VirtualConsole.PluginType 2  # HTML5 (requires iDRAC v2.30.30.30 or greater).
+# racadm set system.power.redundancypolicy 1
+
+## Configure Storage Subsystem:
+
+# racadm raid createvd:<Controller FQDD> -rl {r0|r1|r5|r6|r10|r50|r60}
+#          [-wp {wt|wb}] [-rp {nra|ra|ara}]
+#          [-ss {1k|2k|4k|8k|16k|32k|64k|128k|256k|512k|1M|2M|4M|8M|16M}]
+#          -pdkey:<comma separated PD FQDD> [-dcp {enabled|disabled|default}]
+#          [-name <VD name>] [-size <VD size>{b|k|m|g|t}]
+
+## Create RAID, Virtual Disk 0:
+#    RAID Level: 1
+#    Write Policy: Write Back
+#    Read Policy: Read Ahead
+#    Default Cache Policy (Cache on Disk): Enabled
+#    Physical Disks: Disk.Bay.0 and Disk.Bay.1
+#    Enclosure: Enclosure.Internal.0-1
+#    Controller: RAID.Integrated.1-1
+#    VD Name: ROOT
+# racadm raid createvd:RAID.Integrated.1-1 -rl r1 -wp wb -rp ra -dcp enabled -pdkey:Disk.Bay.0:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.1:Enclosure.Internal.0-1:RAID.Integrated.1-1 -name ROOT
+
+## Create RAID, Virtual Disk 1:
+#    RAID Level: 5
+#    Stripe Size: 64k
+#    Write Policy: Write Through (Recommend for SSD)
+#    Read Policy: No Read Ahead (Recommend for SSD)
+#    Default Cache Policy (Cache on Disk): Enabled
+#    Physical Disks: Disk.Bay.2, Disk.Bay.3, Disk.Bay.4, and Disk.Bay.5
+#    Enclosure: Enclosure.Internal.0-1
+#    Controller: RAID.Integrated.1-1
+#    VD Name: IMAGES
+# racadm raid createvd:RAID.Integrated.1-1 -rl r5 -ss 64k -wp wt -rp nra -dcp enabled -pdkey:Disk.Bay.2:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.3:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.4:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.5:Enclosure.Internal.0-1:RAID.Integrated.1-1 -name IMAGES
+
+## Initialize Virtual Disks:
+# racadm raid init:Disk.Virtual.0:RAID.Integrated.1-1 -speed fast
+# racadm raid init:Disk.Virtual.1:RAID.Integrated.1-1 -speed fast
+
+## Set Integrated RAID Virtual Disk Boot Device:
+# racadm raid setbootvd:RAID.Integrated.1-1 -vd Disk.Virtual.0:RAID.Integrated.1-1
+
+## Queue Integrated RAID changes, for RAID use the --realtime option.
+# racadm jobqueue create --realtime RAID.Integrated.1-1
+
+## View volume layouts:
+# racadm raid get vdisks -o -p layout,status
+
+## View physical disks:
+# racadm storage get pdisks
+
+## Reset PERC configuration (destructive):
+# racadm storage resetconfig:RAID.Integrated.1-1
+
+## Delete volume(s):
+# racadm raid deletevd:Disk.Virtual.0:RAID.Integrated.1-1
+# racadm raid deletevd:Disk.Virtual.1:RAID.Integrated.1-1
+
+## Create multi-volume array:
+# racadm raid createvd:RAID.Integrated.1-1 -rl r5 -ss 64k -wp wt -rp ra -dcp enabled -pdkey:Disk.Bay.0:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.1:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.2:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.3:Enclosure.Internal.0-1:RAID.Integrated.1-1 -name ROOT -size 500g
+# racadm raid createvd:RAID.Integrated.1-1 -rl r5 -ss 64k -wp wt -rp ra -dcp enabled -pdkey:Disk.Bay.0:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.1:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.2:Enclosure.Internal.0-1:RAID.Integrated.1-1,Disk.Bay.3:Enclosure.Internal.0-1:RAID.Integrated.1-1 -name INSTANCES
+# racadm jobqueue create --realtime RAID.Integrated.1-1
+
+idrac_exec () {
+	output=$(sshpass -p ${password} ssh -o StrictHostKeyChecking=no -nl ${username} ${1} "${2}" 2>&1 | nl -w1 | sed "s/^/${1}, /g");
+	echo "${output}";
+}
+
+for i in $(test -f ${1} && cat ${1} || echo "${1}"); do
+	{
+	if test -f "${2}"; then
+		while read -r j; do
+			idrac_exec ${i} "${j}";
+		done < "${2}";
+	else
+		idrac_exec ${i} "${2}";
+	fi
+	} &
+done;
+
+wait;
