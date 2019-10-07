@@ -8,7 +8,7 @@ PERCCLI doesn't exist in Dell's Linux package repositories, so we need to build 
 The tool has runtime dependancies on alien, fakeroot, apt-ftparchive (apt-utils), and dpkg-buildpackage (dpkg-dev) commands.
 
 ```bash
-apt -qq install alien fakeroot apt-utils dpkg-dev;
+apt -qq install alien fakeroot apt-utils dpkg-dev build-essential;
 ```
 
 Here are the basic steps to use this tool:
