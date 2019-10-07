@@ -1,0 +1,16 @@
+
+# Here is a simple example of how to setup a local apt package repository on the cfg01 node,
+# cfg01 already has apache2 installed for MAAS so the process is very straightforward, just
+# be sure to set the executable bit set on all directories, easiest thing is chmod -R 755 *
+
+test -x /usr/bin/apt-ftparchive || apt -y install apt-utils;
+mkdir -p /var/www/html/ubuntu/amd64;
+cd /var/www/html/ubuntu;
+wget -P ./amd64 http://mirror.mirantis.com/update/proposed/salt-formulas/xenial/pool/main/s/salt-formula-backports/salt-formula-backports_0.1%2B201909271115.a35cfb9~xenial1_all.deb;
+apt-ftparchive --arch amd64 packages amd64 > Packages;
+gzip -k -f Packages;
+apt-ftparchive release . > Release;
+chmod -R 755 ../ubuntu;
+echo "deb [arch=amd64 trusted=yes] http://$(hostname -f)/ubuntu/ /" > /etc/apt/sources.list.d/supplemental.list;
+apt update;
+apt -y install salt-formula-backports;
