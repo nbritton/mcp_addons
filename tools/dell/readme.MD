@@ -66,7 +66,7 @@ Dell System Update ("DSU") is the utility used to update the firmware on Dell ma
 
 The recommend way to install and manage the DSU utility is by adding the dsu.yml reclass configuration file to the salt model, and running:
 ```bash
-http://www.exabit.io/ubuntu/get-dell-dsu-deb-pkgs | bash
+https://raw.githubusercontent.com/nbritton/mcp_addons/master/tools/dell/get-dell-dsu-deb-pkgs | bash
 ```
 from  cfg01:/var/www/html/dell/dsu/, this script will extract the DSU .deb packages from the .BIN files and setup a local HTTP repository for them on the cfg01 node. Once get-dell-dsu-deb-pkgs is finished you can then add the class include into the model for the machines you want to install this on.
 ```yaml
