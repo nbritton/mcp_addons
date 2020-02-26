@@ -1,0 +1,17 @@
+#!/bin/bash
+
+## Confirmed to work on Lenovo XCC BMC v3.00.
+
+## Set username and password prior to running.
+username="USERID";
+password="PASSW0RD";
+
+for host in $(cat ${1}); do
+    serialnumber="$(http --verify no -a ${username}:${password} GET https://${host}/redfish/v1/Systems/1 | awk -F'"' '/SerialNumber/ {print $4}')";
+    hostname="$(http --verify no -a ${username}:${password} GET https://${host}/redfish/v1/Systems/1 | jq --raw-output '.HostName')";
+    printf "${host} ${serialnumber} ${hostname} ";
+    for interface in $(http --verify no -a ${username}:${password} GET https://${host}/redfish/v1/Systems/1/EthernetInterfaces | jq '.Members' | awk -F'"' '/NIC/ {print $4}'); do
+        http --verify no -a ${username}:${password} GET https://${host}/${interface} | jq --raw-output '.PermanentMACAddress' | tr '\n' ' ';
+    done
+    echo;
+done
