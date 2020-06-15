@@ -8,9 +8,9 @@ password="";
 
 for host in $(cat ${1}); do
     service_tag=$(http --verify no -a ${username}:${password} GET https://${host}/redfish/v1/Systems/System.Embedded.1 | jq '.SKU' | tr -d '\n' | tr -d '"';)
-    nic_mac1=$(http --verify no -a ${username}:${password} GET https://${host}/redfish/v1/Systems/System.Embedded.1/NetworkInterfaces/NIC.Slot.2/NetworkPorts/NIC.Slot.2-1 | jq '.AssociatedNetworkAddresses[]' | tr -d '\n' | tr -d '"';)
-    nic_mac2=$(http --verify no -a ${username}:${password} GET https://${host}/redfish/v1/Systems/System.Embedded.1/NetworkInterfaces/NIC.Slot.2/NetworkPorts/NIC.Slot.2-2 | jq '.AssociatedNetworkAddresses[]' | tr -d '\n' | tr -d '"';)
-    nic_mac3=$(http --verify no -a ${username}:${password} GET https://${host}/redfish/v1/Systems/System.Embedded.1/NetworkInterfaces/NIC.Slot.3/NetworkPorts/NIC.Slot.3-1 | jq '.AssociatedNetworkAddresses[]' | tr -d '\n' | tr -d '"';)
-    nic_mac4=$(http --verify no -a ${username}:${password} GET https://${host}/redfish/v1/Systems/System.Embedded.1/NetworkInterfaces/NIC.Slot.3/NetworkPorts/NIC.Slot.3-2 | jq '.AssociatedNetworkAddresses[]' | tr -d '\n' | tr -d '"';)
-    printf "${service_tag} ${nic_mac1} ${nic_mac2} ${nic_mac3} ${nic_mac4}" | tr "A-Z" "a-z";
+    nic_mac1=$(http --verify no -a ${username}:${password} GET https://${host}/redfish/v1/Systems/System.Embedded.1/NetworkInterfaces/NIC.Integrated.1/NetworkPorts/NIC.Integrated.1-1 | jq '.AssociatedNetworkAddresses[]' | tr -d '\n' | tr -d '"';)
+    nic_mac2=$(http --verify no -a ${username}:${password} GET https://${host}/redfish/v1/Systems/System.Embedded.1/NetworkInterfaces/NIC.Integrated.1/NetworkPorts/NIC.Integrated.1-2 | jq '.AssociatedNetworkAddresses[]' | tr -d '\n' | tr -d '"';)
+    nic_mac3=$(http --verify no -a ${username}:${password} GET https://${host}/redfish/v1/Systems/System.Embedded.1/NetworkInterfaces/NIC.Integrated.1/NetworkPorts/NIC.Integrated.1-3 | jq '.AssociatedNetworkAddresses[]' | tr -d '\n' | tr -d '"';)
+    nic_mac4=$(http --verify no -a ${username}:${password} GET https://${host}/redfish/v1/Systems/System.Embedded.1/NetworkInterfaces/NIC.Integrated.1/NetworkPorts/NIC.Integrated.1-1 | jq '.AssociatedNetworkAddresses[]' | tr -d '\n' | tr -d '"';)
+    echo "${host} ${service_tag} ${nic_mac1} ${nic_mac2} ${nic_mac3} ${nic_mac4}" | tr "A-Z" "a-z";
 done
