@@ -55,7 +55,7 @@ provided as an argument to the main script.
 
    ```
    classes:
-   - cluster.dvtcos.infra.maas_machines.machine_list
+   - cluster.<cluser_name>.infra.maas_machines.machine_list
    ```
 
   
